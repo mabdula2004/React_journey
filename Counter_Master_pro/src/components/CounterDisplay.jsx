@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { TrendingUp, TrendingDown, Minus, Hash, AlertTriangle } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, Hash, AlertTriangle, Eye } from 'lucide-react'
 
 export default function CounterDisplay({
   count,
@@ -10,11 +10,12 @@ export default function CounterDisplay({
   isMaxEnabled,
 }) {
   const [isBumping, setIsBumping] = useState(false)
+  const [useCommas, setUseCommas] = useState(true)
 
   // Trigger brief bump micro-animation whenever count changes
   useEffect(() => {
     setIsBumping(true)
-    const timer = setTimeout(() => setIsBumping(false), 200)
+    const timer = setTimeout(() => setIsBumping(false), 180)
     return () => clearTimeout(timer)
   }, [count])
 
@@ -25,6 +26,21 @@ export default function CounterDisplay({
 
   const isAtMin = isMinEnabled && count <= minLimit
   const isAtMax = isMaxEnabled && count >= maxLimit
+
+  // Format number
+  const formattedCount = useCommas ? count.toLocaleString() : count.toString()
+  const charLength = formattedCount.length
+
+  // Dynamically adapt font size so numbers of any length fit smoothly inside the card
+  const getFontSizeClass = () => {
+    if (charLength <= 3) return 'text-6xl sm:text-7xl md:text-8xl'
+    if (charLength <= 5) return 'text-5xl sm:text-6xl md:text-7xl'
+    if (charLength <= 8) return 'text-4xl sm:text-5xl md:text-6xl'
+    if (charLength <= 11) return 'text-3xl sm:text-4xl md:text-5xl'
+    if (charLength <= 14) return 'text-2xl sm:text-3xl md:text-4xl'
+    if (charLength <= 18) return 'text-xl sm:text-2xl md:text-3xl'
+    return 'text-lg sm:text-xl md:text-2xl'
+  }
 
   // Color palette based on value
   const getThemeStyles = () => {
@@ -68,7 +84,7 @@ export default function CounterDisplay({
   const isEven = count % 2 === 0
 
   return (
-    <div className={`relative w-full rounded-3xl p-6 sm:p-10 transition-all duration-500 glass-panel shadow-2xl ${themeStyle.glow} border border-slate-200/80 dark:border-slate-800/80 overflow-hidden`}>
+    <div className={`relative w-full rounded-3xl p-5 sm:p-8 md:p-10 transition-all duration-500 glass-panel shadow-2xl ${themeStyle.glow} border border-slate-200/80 dark:border-slate-800/80 overflow-hidden`}>
       
       {/* Dynamic Background Glow Effect */}
       <div className={`absolute inset-0 bg-gradient-to-b ${themeStyle.gradient} pointer-events-none transition-all duration-700`} />
@@ -77,10 +93,10 @@ export default function CounterDisplay({
       <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-24 -left-24 w-48 h-48 rounded-full bg-purple-500/10 blur-3xl pointer-events-none" />
 
-      <div className="relative z-10 flex flex-col items-center justify-center text-center">
+      <div className="relative z-10 flex flex-col items-center justify-center text-center w-full">
         
-        {/* Top Badges: Status & Parity */}
-        <div className="flex flex-wrap items-center justify-center gap-2 mb-4 sm:mb-6">
+        {/* Top Badges: Status, Parity & Limits */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-3 sm:mb-5">
           <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${themeStyle.badgeBg} transition-colors duration-300`}>
             <IconComponent className="w-3.5 h-3.5" />
             <span>{themeStyle.label}</span>
@@ -90,6 +106,17 @@ export default function CounterDisplay({
             <Hash className="w-3 h-3 text-slate-400" />
             <span>{isEven ? 'Even' : 'Odd'}</span>
           </span>
+
+          {/* Comma Format Toggle */}
+          <button
+            type="button"
+            onClick={() => setUseCommas(!useCommas)}
+            title="Toggle thousand separators"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800/70 dark:hover:bg-slate-700/80 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60 transition-colors"
+          >
+            <Eye className="w-3 h-3 text-slate-400" />
+            <span className="text-[11px]">{useCommas ? 'Formatted' : 'Raw'}</span>
+          </button>
 
           {/* Boundary Alert Badges */}
           {isAtMin && (
@@ -107,15 +134,22 @@ export default function CounterDisplay({
           )}
         </div>
 
-        {/* The Giant Animated Counter Display */}
-        <div className="my-2 sm:my-4 flex items-center justify-center select-none">
+        {/* The Animated Auto-Fitting Counter Display */}
+        <div className="w-full my-2 sm:my-4 flex items-center justify-center px-2 select-none overflow-hidden">
           <div
-            className={`font-mono text-7xl sm:text-8xl md:text-9xl font-extrabold tracking-tighter transition-all duration-200 transform ${
-              themeStyle.text
-            } ${isBumping ? 'scale-108' : 'scale-100'}`}
-            style={{ textShadow: isPositive ? '0 0 40px rgba(16, 185, 129, 0.2)' : isNegative ? '0 0 40px rgba(244, 63, 94, 0.2)' : 'none' }}
+            className={`w-full text-center font-mono font-extrabold tracking-tight transition-all duration-200 transform break-all ${
+              getFontSizeClass()
+            } ${themeStyle.text} ${isBumping ? 'scale-104' : 'scale-100'}`}
+            style={{
+              textShadow: isPositive
+                ? '0 0 35px rgba(16, 185, 129, 0.25)'
+                : isNegative
+                ? '0 0 35px rgba(244, 63, 94, 0.25)'
+                : 'none',
+              wordBreak: 'break-word',
+            }}
           >
-            {count}
+            {formattedCount}
           </div>
         </div>
 
