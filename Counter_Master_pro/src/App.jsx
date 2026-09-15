@@ -1,62 +1,124 @@
-import React from 'react'
+import React, { useState } from 'react'
 import Navbar from './components/Navbar'
+import CounterDisplay from './components/CounterDisplay'
+import ControlPanel from './components/ControlPanel'
 import { useTheme } from './hooks/useTheme'
-import { Moon, Sun, CheckCircle2, ArrowRight } from 'lucide-react'
+import { CheckCircle2, Sliders, History, Sparkles } from 'lucide-react'
 
 function App() {
   const { theme, toggleTheme } = useTheme()
 
+  // Counter core state
+  const [count, setCount] = useState(0)
+  const [step, setStep] = useState(1)
+  const [lastAction, setLastAction] = useState('Initial state (0)')
+
+  // Min / Max boundary states (ready for Milestone 4)
+  const [minLimit, setMinLimit] = useState(-100)
+  const [maxLimit, setMaxLimit] = useState(100)
+  const [isMinEnabled, setIsMinEnabled] = useState(false)
+  const [isMaxEnabled, setIsMaxEnabled] = useState(false)
+
+  // Validation checks
+  const disabledIncrement = isMaxEnabled && count + step > maxLimit
+  const disabledDecrement = isMinEnabled && count - step < minLimit
+
+  // Handlers with bounds clamping and lastAction tracking
+  const handleIncrement = () => {
+    if (disabledIncrement) return
+    const nextVal = count + step
+    setCount(nextVal)
+    setLastAction(`Increased (+${step})`)
+  }
+
+  const handleDecrement = () => {
+    if (disabledDecrement) return
+    const nextVal = count - step
+    setCount(nextVal)
+    setLastAction(`Decreased (-${step})`)
+  }
+
+  const handleReset = () => {
+    setCount(0)
+    setLastAction('Reset (0)')
+  }
+
+  const handleMultiply = () => {
+    const nextVal = count * 2
+    if (isMaxEnabled && nextVal > maxLimit) return
+    if (isMinEnabled && nextVal < minLimit) return
+    setCount(nextVal)
+    setLastAction('Multiplied (×2)')
+  }
+
+  const handleDivide = () => {
+    const nextVal = Math.trunc(count / 2)
+    if (isMaxEnabled && nextVal > maxLimit) return
+    if (isMinEnabled && nextVal < minLimit) return
+    setCount(nextVal)
+    setLastAction('Divided (÷2)')
+  }
+
+  const handleInvert = () => {
+    const nextVal = -count
+    if (isMaxEnabled && nextVal > maxLimit) return
+    if (isMinEnabled && nextVal < minLimit) return
+    setCount(nextVal)
+    setLastAction('Inverted sign (±)')
+  }
+
   return (
-    <div className="min-h-screen bg-slate-100/60 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-300">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-indigo-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-300">
       {/* Top Navigation */}
       <Navbar theme={theme} toggleTheme={toggleTheme} />
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col items-center justify-center">
+      {/* Main Studio Area */}
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex flex-col items-center justify-center">
         
-        {/* Milestone 2 Completion Card */}
-        <div className="w-full max-w-lg p-8 rounded-3xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 shadow-2xl shadow-indigo-500/5 text-center transition-all duration-300">
-          
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 mb-6">
-            <CheckCircle2 className="w-4 h-4" />
-            <span>Milestone 2 Active</span>
+        {/* Milestone 3 Active Tag */}
+        <div className="w-full flex items-center justify-between mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 shadow-sm">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span>Milestone 3: Core Counter Active</span>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            Navbar & Theme Switcher
-          </h2>
-
-          <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-            Dark and light modes are active, dynamically toggled via the navbar button, and persisted in <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-xs text-indigo-600 dark:text-indigo-400">localStorage</code>.
-          </p>
-
-          <div className="mt-8 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              Current Theme Mode
-            </span>
-            <button
-              onClick={toggleTheme}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-500/20 active:scale-95 transition-all"
-            >
-              {theme === 'dark' ? (
-                <>
-                  <Moon className="w-3.5 h-3.5 text-indigo-200" />
-                  <span>Dark Mode</span>
-                </>
-              ) : (
-                <>
-                  <Sun className="w-3.5 h-3.5 text-amber-300" />
-                  <span>Light Mode</span>
-                </>
-              )}
-            </button>
+          <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
+            Step: <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">{step}</span>
           </div>
+        </div>
 
-          <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800/80 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1">
-            <span>Next up: Core Counter Display & Controls</span>
-            <ArrowRight className="w-3.5 h-3.5 text-indigo-500" />
+        {/* Counter Card & Controls */}
+        <div className="w-full flex flex-col gap-6">
+          {/* Animated Counter Display */}
+          <CounterDisplay
+            count={count}
+            lastAction={lastAction}
+            minLimit={minLimit}
+            maxLimit={maxLimit}
+            isMinEnabled={isMinEnabled}
+            isMaxEnabled={isMaxEnabled}
+          />
+
+          {/* Core Controls */}
+          <div className="p-4 sm:p-6 rounded-3xl bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 shadow-xl shadow-slate-200/50 dark:shadow-none">
+            <ControlPanel
+              onIncrement={handleIncrement}
+              onDecrement={handleDecrement}
+              onReset={handleReset}
+              onMultiply={handleMultiply}
+              onDivide={handleDivide}
+              onInvert={handleInvert}
+              step={step}
+              disabledIncrement={disabledIncrement}
+              disabledDecrement={disabledDecrement}
+            />
           </div>
+        </div>
 
+        {/* Up Next Preview Footer */}
+        <div className="mt-8 text-center text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center gap-2">
+          <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+          <span>Milestone 4 next: Custom Step Configurator & Min/Max Limit Safeguards</span>
         </div>
 
       </main>
